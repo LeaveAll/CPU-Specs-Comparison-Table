@@ -565,6 +565,7 @@ function memoryText(r){
   return choice?`${r.mem} · ${state.fastMemory?"fastest":"slowest"} selected ${choice.type}-${choice.speed}`:r.mem;
 }
 function memoryHtml(r){
+  if(!state.games.size) return r.mem;
   const choice=selectedMemory(r,state.memoryType,state.fastMemory);
   if(!choice) return r.mem;
   return r.mem.replace(/DDR[45][^/]+/g,text=>{

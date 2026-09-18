@@ -544,26 +544,26 @@ function memoryChoices(r){
     return {type,speed};
   }).filter(x=>x.speed);
 }
-function selectedMemory(r,memoryType="DDR5"){
+function selectedMemory(r,memoryType="DDR5",fastest=true){
   const choices=memoryChoices(r);
   if(!choices.length) return null;
-  return choices.find(x=>x.type===memoryType)||choices.reduce((a,b)=>b.speed>a.speed?b:a);
+  const preferred=choices.filter(x=>x.type===memoryType);
+  const pool=preferred.length?preferred:choices;
+  return pool.reduce((a,b)=>fastest?(b.speed>a.speed?b:a):(b.speed<a.speed?b:a));
 }
 function memoryFactor(r,fastMemory=false,memoryType="DDR5"){
-  if(!fastMemory) return 1;
-  const choice=selectedMemory(r,memoryType);
+  const choice=selectedMemory(r,memoryType,fastMemory);
   if(!choice) return 1;
   const base=choice.type==="DDR5"?4800:3200;
   const sensitivity=choice.type==="DDR5"?0.08:0.06;
   return 1+Math.max(0,choice.speed-base)/base*sensitivity;
 }
 function memoryText(r){
-  const choice=state.fastMemory?selectedMemory(r,state.memoryType):null;
-  return choice?`${r.mem} · selected ${choice.type}-${choice.speed}`:r.mem;
+  const choice=selectedMemory(r,state.memoryType,state.fastMemory);
+  return choice?`${r.mem} · ${state.fastMemory?"fastest":"slowest"} selected ${choice.type}-${choice.speed}`:r.mem;
 }
 function memoryHtml(r){
-  if(!state.fastMemory) return r.mem;
-  const choice=selectedMemory(r,state.memoryType);
+  const choice=selectedMemory(r,state.memoryType,state.fastMemory);
   if(!choice) return r.mem;
   return r.mem.replace(/DDR[45][^/]+/g,text=>{
     const type=(text.match(/^DDR[45]/)||[""])[0];
@@ -807,8 +807,8 @@ function updateHint(){
     ?"<b>Unlimited power ON</b>: good air cooling, power limits removed; unlocked chips (Intel K/KF/KS, AMD X/XT/PBO) get extra clock at max safe voltage, locked chips hold turbo indefinitely — Max Turbo and TDP show stock → <i>estimated</i>, game % recalculated"
     :"stock power limits and clocks");
   parts.push(state.fastMemory
-    ?`<b>Fastest memory ON</b>: ${state.memoryType} preferred where supported; selected speed highlighted and game % recalculated`
-    :"platform memory baseline");
+    ?`<b>Fastest memory ON</b>: ${state.memoryType} preferred where supported; fastest selected speed highlighted and game % recalculated`
+    :`<b>Slowest memory</b>: ${state.memoryType} preferred where supported; slowest selected speed highlighted and game % calculated`);
   const hidden=SUFFIXES.filter(s=>!state.filters.has(s));
   if(hidden.length) parts.push(`hidden suffixes: <b>${hidden.map(s=>SLABEL[s]).join(", ")}</b>`);
   if(state.query.trim()) parts.push(`search: <b>${state.query.trim().replace(/</g,"&lt;")}</b>`);

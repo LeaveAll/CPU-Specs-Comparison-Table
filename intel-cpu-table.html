@@ -561,9 +561,23 @@ const SLABEL={"—":"No suffix"}; SUFFIXES.forEach(s=>{ if(!SLABEL[s]) SLABEL[s]
 const state={sort:[], filters:new Set(SUFFIXES), query:"", fitState:{}, games:new Set(),
   vendors:new Set(["Intel","AMD"]), unlimitedPower:false, highlighted:new Set()};
 
+function variantKey(model){
+  return model.trim().replace(/\s+PLUS$/i,"")
+    .replace(/(?:X3D|XT|KS|KF|GE|GT|K|F|T|S|X|G|E)$/i,"")
+    .trim().toUpperCase();
+}
+function variantRank(r){
+  return {X3D:8,KS:7,KF:6,K:5,XT:5,X:4,G:3,GE:3,GT:3,
+    "—":2,F:2,S:1,T:0,E:0}[r.sfx]??2;
+}
+
 /* default sort: newest generation first (chronological across vendors, Intel first on ties),
-   then tier, then turbo, then threads, then name */
+   then tier, same-model variants by estimated performance, then turbo, threads, and name */
 function defaultCmp(a,b){
+  if(a.genOrder===b.genOrder && a.tier===b.tier && variantKey(a.model)===variantKey(b.model)){
+    return effTurbo(b)-effTurbo(a) || b.threads-a.threads || b.tdp-a.tdp ||
+           variantRank(b)-variantRank(a) || a.model.localeCompare(b.model);
+  }
   return b.genOrder-a.genOrder || (a.vendor===b.vendor?0:(a.vendor==="Intel"?-1:1)) ||
          b.tier-a.tier || effTurbo(b)-effTurbo(a) || b.threads-a.threads ||
          a.model.localeCompare(b.model);

@@ -19,6 +19,7 @@
   #search{flex:1 1 320px;min-width:240px;background:#0c0e13;border:1px solid var(--line);
     color:var(--txt);border-radius:6px;padding:7px 10px;font-size:13px;outline:none}
   #search:focus{border-color:var(--accent)}
+  .top-search{flex:0 1 280px;min-width:180px;margin-left:auto}
   .filters{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
   .filters .lbl{color:var(--dim);margin-right:4px}
   .chk{display:inline-flex;align-items:center;gap:5px;background:#0c0e13;border:1px solid var(--line);
@@ -117,10 +118,10 @@
       <button class="mini tab" data-game="aoe3de">AOE3DE performance</button>
       <button class="mini tab" data-game="ra2yr">RA2YR performance</button>
     </span>
+    <input id="search" class="top-search" placeholder='Search models — e.g.  6700k, 9500, 5800x'>
     <button class="mini" id="help">Help</button>
   </h1>
   <div class="controls">
-    <input id="search" placeholder='Search models — comma separated, e.g.  6700k, 9500, 5800x'>
     <div class="filters" id="filters"><span class="lbl">Show suffix:</span></div>
     <label class="power"><input type="checkbox" id="unlimitedPower"> Unlimited power / safe OC estimate</label>
     <label class="power"><input type="checkbox" id="fastMemory"> Fastest supported memory</label>

@@ -63,6 +63,8 @@
   .pc{color:var(--pc)} .ec{color:var(--ec)} .tot{color:var(--dim)}
   .up{color:#7ee787} .down{color:#ff7b72} .flat{color:var(--dim)}
   .arrow{margin-left:5px;font-size:10px;color:var(--accent)}
+  .views{display:inline-flex;gap:4px;margin-left:10px;vertical-align:middle}
+  .views .tab.active{border-color:var(--accent);color:#fff;background:#1b3658}
   .rs{position:absolute;top:0;right:0;width:13px;height:100%;cursor:col-resize;z-index:5}
   .rs:hover{background:linear-gradient(90deg,transparent,var(--accent))}
   tfoot td{color:var(--dim);border:none;padding:8px}
@@ -71,13 +73,20 @@
 </head>
 <body>
 <header>
-  <h1>Intel Desktop CPUs — 6th Gen onwards <span id="count"></span></h1>
+  <h1>Intel Desktop CPUs — 6th Gen onwards <span id="count"></span>
+    <span class="views" id="views">
+      <button class="mini tab active" data-game="">CPU specs</button>
+      <button class="mini tab" data-game="aoe2de">AOE2DE performance</button>
+      <button class="mini tab" data-game="aoe3de">AOE3DE performance</button>
+      <button class="mini tab" data-game="ra2yr">RA2YR performance</button>
+    </span>
+  </h1>
   <div class="controls">
     <input id="search" placeholder='Search models — comma separated, e.g.  6700k, 9500, 14900'>
     <div class="filters" id="filters"><span class="lbl">Show suffix:</span></div>
     <button class="mini" id="reset">Reset</button>
   </div>
-  <div class="hint">Drag a column edge to resize · double-click the right edge of a header to fit the widest cell, double-click again to shrink to the narrowest · click a header to sort</div>
+  <div class="hint">Drag a column edge to resize · double-click the right edge of a header to fit the widest cell, double-click again to shrink to the narrowest · click a header to sort · game tabs are estimates with the fastest CPU set to 100%</div>
 </header>
 
 <div class="wrap" id="wrap">
@@ -286,7 +295,8 @@ const COLS=[
    v:r=>r.model, h:r=>`<span class="model">${r.model}</span>`+(r.sfx!=="—"?`<span class="sfx s-${r.sfx}">${r.sfx}</span>`:"")},
   {k:"gen",    t:"Generation", w:145, sort:"num", v:r=>r.gen, h:r=>r.genName, txt:r=>r.genName},
   {k:"arch",   t:"Architecture", w:300, v:r=>r.arch},
-  {k:"node",   t:"Process Node", w:110, num:true, v:r=>+r.node, txt:r=>r.node},
+  {k:"node",   t:"Process Node", w:110, num:true, v:r=>+r.node, txt:r=>r.node+" nm",
+   h:r=>r.node+" nm"},
   {k:"cores",  t:"Cores / Threads", w:250, num:true, v:r=>r.threads, h:r=>r.coresHtml,
    txt:r=>r.coresHtml.replace(/<[^>]+>/g,"")},
   {k:"turbo",  t:"Max Turbo", w:100, num:true, v:r=>r.turbo, txt:r=>r.turbo.toFixed(1)+" GHz"},
@@ -299,12 +309,43 @@ const COLS=[
    h:r=>`<span class="${r.ipc>0?'up':(r.ipc<0?'down':'flat')}">${r.ipc>0?"+":""}${r.ipc}%</span>`},
   {k:"tdp",    t:"TDP", w:85, num:true, v:r=>r.tdp, txt:r=>r.tdp+" W"}
 ];
+const GAME_DEFS=[
+  ["aoe2de","AOE2DE Performance"],
+  ["aoe3de","AOE3DE Performance"],
+  ["ra2yr","RA2YR Performance"]
+];
+const generationFactor={};
+Object.keys(GENS).map(Number).sort((a,b)=>a-b).forEach(gen=>{
+  const prev=gen-1;
+  generationFactor[gen]=(generationFactor[prev]||1)*(1+GENS[gen].ipc/100);
+});
+function gameScore(r,game){
+  const serial=r.turbo*(generationFactor[r.gen]||1);
+  const thread=Math.log2(Math.max(1,r.threads));
+  const weight=game==="aoe3de"?0.28:(game==="ra2yr"?0.08:0.15);
+  return serial*(1-weight+weight*thread/5);
+}
+const gameMax={};
+GAME_DEFS.forEach(([game])=>gameMax[game]=Math.max(...DATA.map(r=>gameScore(r,game))));
+DATA.forEach(r=>{
+  r.performance={};
+  GAME_DEFS.forEach(([game])=>{
+    r.performance[game]=Math.round(gameScore(r,game)/gameMax[game]*1000)/10;
+  });
+});
+GAME_DEFS.forEach(([game,title])=>{
+  COLS.push({
+    k:game,t:title+" (est.)",w:125,num:true,game,
+    v:r=>r.performance[game],txt:r=>r.performance[game].toFixed(1)+"%",
+    h:r=>r.performance[game].toFixed(1)+"%"
+  });
+});
 COLS.forEach(c=>{ if(!c.txt) c.txt=r=>String(c.v(r)); if(!c.h) c.h=r=>c.txt(r); });
 
 /* ---------------- state ---------------- */
 const SUFFIXES=["—","S","T","K","F","KS","KF"];
 const SLABEL={"—":"No suffix","S":"S","T":"T","K":"K","F":"F","KS":"KS","KF":"KF"};
-const state={sort:[], filters:new Set(SUFFIXES), query:"", fitState:{}};
+const state={sort:[], filters:new Set(SUFFIXES), query:"", fitState:{}, game:""};
 
 /* default sort: newest gen first, then tier, then turbo, then threads, then name */
 function defaultCmp(a,b){
@@ -331,6 +372,9 @@ document.getElementById("reset").addEventListener("click",()=>{
   state.query=""; document.getElementById("search").value="";
   state.sort=[]; state.filters=new Set(SUFFIXES);
   state.fitState={};
+  state.game="";
+  updateColumnVisibility();
+  document.querySelectorAll("#views .tab").forEach(b=>b.classList.toggle("active",!b.dataset.game));
   fbox.querySelectorAll("label.chk").forEach(l=>{l.classList.remove("off");l.querySelector("input").checked=true;});
   COLS.forEach((c,i)=>setWidth(i,c.w));
   render();
@@ -354,8 +398,17 @@ COLS.forEach((c,i)=>{
   rs.addEventListener("click",ev=>ev.stopPropagation());
   hrow.appendChild(th);
 });
+function updateColumnVisibility(){
+  COLS.forEach((c,i)=>{
+    const visible=!c.game || c.game===state.game;
+    c.visible=visible;
+    if(cg.children[i]) cg.children[i].style.display=visible?"":"none";
+    if(hrow.children[i]) hrow.children[i].style.display=visible?"":"none";
+  });
+  syncTableWidth();
+}
 function syncTableWidth(){
-  const total=COLS.reduce((a,c)=>a+c.w,0);
+  const total=COLS.reduce((a,c)=>a+(c.visible===false?0:c.w),0);
   tbl.style.width=Math.max(total,wrapEl.clientWidth)+"px";
   /* keep the sticky first column pinned correctly */
   document.documentElement.style.setProperty("--c0",COLS[0].w+"px");
@@ -412,7 +465,7 @@ function autoFit(i){
 }
 function fitAllColumns(){
   state.fitState={};
-  COLS.forEach((c,i)=>autoFit(i));
+  COLS.forEach((c,i)=>{ if(c.visible!==false) autoFit(i); });
 }
 
 /* ---------------- sorting ---------------- */
@@ -469,7 +522,17 @@ function render(){
   });
   document.getElementById("count").textContent=`— ${rows.length} of ${DATA.length} models shown`;
 }
+document.querySelectorAll("#views .tab").forEach(button=>{
+  button.addEventListener("click",()=>{
+    state.game=button.dataset.game;
+    document.querySelectorAll("#views .tab").forEach(b=>b.classList.toggle("active",b===button));
+    updateColumnVisibility();
+    render();
+    fitAllColumns();
+  });
+});
 render();
+updateColumnVisibility();
 fitAllColumns();
 </script>
 </body>

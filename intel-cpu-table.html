@@ -464,7 +464,7 @@ const DATA = RAW.map(r=>{
   const year=(ovr&&ovr.year)||(vendor==="Intel"?intelYear(model,+genRaw,g):g.year);
   const sfx=suffixOf(model);
   const unlocked=vendor==="Intel"?["K","KF","KS"].includes(sfx):(sfx!=="X3D"||genKey==="A6") && !/^Athlon/.test(model);
-  return {model,vendor,gen:genKey,genOrder:g.order,genName:g.name,arch:g.arch,node:g.node,cores,threads,coresHtml,
+  return {model,vendor,gen:genKey,genOrder:g.order,genYear:g.year,genName:g.name,arch:g.arch,node:g.node,cores,threads,coresHtml,
     pcores:co.p!==undefined?co.p:co.c,ecores:co.e||0,
     turbo,l3,socket:g.socket,chipset:g.chipset,mem:g.mem,ipc:g.ipc,tdp,year,
     sfx,tier:tierOf(model),family:familyOf(model),unlocked};
@@ -787,6 +787,15 @@ function toggleSort(i,add){
 function cmpBy(a,b){
   for(const s of state.sort){
     const c=COLS[s.i]; let x=c.v(a), y=c.v(b), d;
+    if(c.k==="arch"){
+      d=(a.genYear-b.genYear) ||
+        (a.vendor===b.vendor?0:(a.vendor==="AMD"?-1:1)) ||
+        (a.genOrder-b.genOrder) ||
+        (b.tier-a.tier) || effTurbo(b)-effTurbo(a) || b.threads-a.threads ||
+        a.model.localeCompare(b.model);
+      if(d) return d*s.dir;
+      continue;
+    }
     if(typeof x==="number"&&typeof y==="number") d=x-y;
     else d=String(x).localeCompare(String(y),undefined,{numeric:true});
     if(d) return d*s.dir;

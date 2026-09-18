@@ -557,9 +557,10 @@ function selectedMemory(r,memoryType="DDR5",fastest=true){
 function memoryFactor(r,fastMemory=false,memoryType="DDR5"){
   const choice=selectedMemory(r,memoryType,fastMemory);
   if(!choice) return 1;
-  const base=choice.type==="DDR5"?4800:3200;
-  const sensitivity=choice.type==="DDR5"?0.08:0.06;
-  return 1+Math.max(0,choice.speed-base)/base*sensitivity;
+  /* Keep DDR4 and DDR5 on one scale so changing families matters even when
+     both are at their platform's minimum or maximum listed speed. */
+  const familyBoost=choice.type==="DDR5"?1.015:1;
+  return familyBoost*Math.pow(choice.speed/3200,0.05);
 }
 function memoryText(r){
   const choice=selectedMemory(r,state.memoryType,state.fastMemory);

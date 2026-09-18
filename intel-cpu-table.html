@@ -65,6 +65,8 @@
   .arrow{margin-left:5px;font-size:10px;color:var(--accent)}
   .views{display:inline-flex;gap:4px;margin-left:10px;vertical-align:middle}
   .views .tab.active{border-color:var(--accent);color:#fff;background:#1b3658}
+  .power{display:inline-flex;align-items:center;gap:6px;color:var(--dim);white-space:nowrap}
+  .power input{accent-color:var(--accent);cursor:pointer}
   .rs{position:absolute;top:0;right:0;width:13px;height:100%;cursor:col-resize;z-index:5}
   .rs:hover{background:linear-gradient(90deg,transparent,var(--accent))}
   tfoot td{color:var(--dim);border:none;padding:8px}
@@ -84,9 +86,10 @@
   <div class="controls">
     <input id="search" placeholder='Search models — comma separated, e.g.  6700k, 9500, 14900'>
     <div class="filters" id="filters"><span class="lbl">Show suffix:</span></div>
+    <label class="power"><input type="checkbox" id="unlimitedPower"> Unlimited power / safe OC estimate</label>
     <button class="mini" id="reset">Reset</button>
   </div>
-  <div class="hint">Drag a column edge to resize · double-click the right edge of a header to fit the widest cell, double-click again to shrink to the narrowest · click a header to sort · game tabs are estimates with the fastest CPU set to 100%</div>
+  <div class="hint">Select any combination of game tabs · estimates use the fastest CPU as 100% · “Unlimited power” models good air cooling, removed power limits, and modest safe extra clock headroom</div>
 </header>
 
 <div class="wrap" id="wrap">
@@ -319,20 +322,28 @@ Object.keys(GENS).map(Number).sort((a,b)=>a-b).forEach(gen=>{
   const prev=gen-1;
   generationFactor[gen]=(generationFactor[prev]||1)*(1+GENS[gen].ipc/100);
 });
-function gameScore(r,game){
-  const serial=r.turbo*(generationFactor[r.gen]||1);
+function gameScore(r,game,unlimitedPower=false){
+  const clockFactor=unlimitedPower
+    ? (["K","KS","KF"].includes(r.sfx)?1.08:1.03)
+    : 1;
+  const serial=r.turbo*clockFactor*(generationFactor[r.gen]||1);
   const thread=Math.log2(Math.max(1,r.threads));
   const weight=game==="aoe3de"?0.28:(game==="ra2yr"?0.08:0.15);
   return serial*(1-weight+weight*thread/5);
 }
-const gameMax={};
-GAME_DEFS.forEach(([game])=>gameMax[game]=Math.max(...DATA.map(r=>gameScore(r,game))));
-DATA.forEach(r=>{
-  r.performance={};
+function recalculatePerformance(unlimitedPower=false){
+  const gameMax={};
   GAME_DEFS.forEach(([game])=>{
-    r.performance[game]=Math.round(gameScore(r,game)/gameMax[game]*1000)/10;
+    gameMax[game]=Math.max(...DATA.map(r=>gameScore(r,game,unlimitedPower)));
   });
-});
+  DATA.forEach(r=>{
+    r.performance={};
+    GAME_DEFS.forEach(([game])=>{
+      r.performance[game]=Math.round(gameScore(r,game,unlimitedPower)/gameMax[game]*1000)/10;
+    });
+  });
+}
+recalculatePerformance();
 GAME_DEFS.forEach(([game,title])=>{
   COLS.push({
     k:game,t:title+" (est.)",w:125,num:true,game,
@@ -345,7 +356,7 @@ COLS.forEach(c=>{ if(!c.txt) c.txt=r=>String(c.v(r)); if(!c.h) c.h=r=>c.txt(r); 
 /* ---------------- state ---------------- */
 const SUFFIXES=["—","S","T","K","F","KS","KF"];
 const SLABEL={"—":"No suffix","S":"S","T":"T","K":"K","F":"F","KS":"KS","KF":"KF"};
-const state={sort:[], filters:new Set(SUFFIXES), query:"", fitState:{}, game:""};
+const state={sort:[], filters:new Set(SUFFIXES), query:"", fitState:{}, games:new Set(), unlimitedPower:false};
 
 /* default sort: newest gen first, then tier, then turbo, then threads, then name */
 function defaultCmp(a,b){
@@ -372,7 +383,9 @@ document.getElementById("reset").addEventListener("click",()=>{
   state.query=""; document.getElementById("search").value="";
   state.sort=[]; state.filters=new Set(SUFFIXES);
   state.fitState={};
-  state.game="";
+  state.games.clear();
+  state.unlimitedPower=false;
+  document.getElementById("unlimitedPower").checked=false;
   updateColumnVisibility();
   document.querySelectorAll("#views .tab").forEach(b=>b.classList.toggle("active",!b.dataset.game));
   fbox.querySelectorAll("label.chk").forEach(l=>{l.classList.remove("off");l.querySelector("input").checked=true;});
@@ -400,7 +413,7 @@ COLS.forEach((c,i)=>{
 });
 function updateColumnVisibility(){
   COLS.forEach((c,i)=>{
-    const visible=!c.game || c.game===state.game;
+    const visible=!c.game || state.games.has(c.game);
     c.visible=visible;
     if(cg.children[i]) cg.children[i].style.display=visible?"":"none";
     if(hrow.children[i]) hrow.children[i].style.display=visible?"":"none";
@@ -525,12 +538,21 @@ function render(){
 }
 document.querySelectorAll("#views .tab").forEach(button=>{
   button.addEventListener("click",()=>{
-    state.game=button.dataset.game;
-    document.querySelectorAll("#views .tab").forEach(b=>b.classList.toggle("active",b===button));
+    const game=button.dataset.game;
+    if(game){
+      state.games.has(game)?state.games.delete(game):state.games.add(game);
+      button.classList.toggle("active",state.games.has(game));
+    }
     updateColumnVisibility();
     render();
     fitAllColumns();
   });
+});
+document.getElementById("unlimitedPower").addEventListener("change",e=>{
+  state.unlimitedPower=e.target.checked;
+  recalculatePerformance(state.unlimitedPower);
+  render();
+  fitAllColumns();
 });
 updateColumnVisibility();
 render();

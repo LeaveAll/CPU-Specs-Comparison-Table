@@ -2,18 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Intel Desktop CPUs — 6th Gen onwards</title>
+<title>Desktop CPUs — Intel 6th Gen onwards &amp; AMD Ryzen</title>
 <style>
   :root{
     --bg:#0f1115; --panel:#171a21; --line:#2a2f3a; --txt:#e6e9ef; --dim:#9aa3b2;
-    --accent:#4c9aff; --head:#1d2129; --stick:#151922; --pc:#7ee787; --ec:#ffb86b;
+    --accent:#4c9aff; --head:#1d2129; --stick:#151922; --pc:#7ee787; --ec:#ffb86b; --oc:#f7c66b;
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
     font:13px/1.35 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
   header{padding:10px 14px 8px;background:var(--panel);border-bottom:1px solid var(--line);
     position:sticky;top:0;z-index:40}
-  h1{margin:0 0 8px;font-size:15px;font-weight:600;letter-spacing:.2px}
+  h1{margin:0 0 8px;font-size:15px;font-weight:600;letter-spacing:.2px;display:flex;align-items:center;flex-wrap:wrap;gap:4px}
   h1 span{color:var(--dim);font-weight:400;font-size:12px;margin-left:8px}
   .controls{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
   #search{flex:1 1 320px;min-width:240px;background:#0c0e13;border:1px solid var(--line);
@@ -44,6 +44,9 @@
   td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   th.num{text-align:right}
   .model{font-weight:600}
+  .vendor{display:inline-block;margin-right:6px;font-size:9px;font-weight:800;letter-spacing:.5px;
+    padding:1px 4px;border-radius:3px;vertical-align:1px;color:#fff}
+  .v-Intel{background:#0a63c9} .v-AMD{background:#c8341c}
   .sfx{display:inline-block;margin-left:7px;font-size:10px;font-weight:800;letter-spacing:.4px;
     padding:1px 5px;border-radius:4px;color:#0b0d12;vertical-align:1px;
     box-shadow:0 0 0 1px rgba(0,0,0,.45), 0 0 6px -1px currentColor}
@@ -53,6 +56,13 @@
   .s-F {background:#5ab9ff}
   .s-T {background:#4ee6c4}
   .s-S {background:#c58cff}
+  .s-X {background:#ff8a65}
+  .s-XT{background:#ffab40}
+  .s-X3D{background:#ff5252;color:#fff}
+  .s-G {background:#9ccc65}
+  .s-GE{background:#66bb6a}
+  .s-GT{background:#aed581}
+  .s-E {background:#80cbc4}
 
   /* generation banding */
   tbody tr.band td{background:#1a2030}
@@ -60,37 +70,88 @@
   tbody tr.gtop td{border-top:2px solid #46536b}
   tbody tr:hover td{background:#232a36 !important}
   tbody tr:hover td.sticky{background:#2b3443 !important}
+  tbody tr{cursor:pointer}
+  /* highlighted rows: animated shimmer */
+  tbody tr.hl td{background:linear-gradient(100deg,#2a3b1f 0%,#3f5a2a 35%,#5a7a37 50%,#3f5a2a 65%,#2a3b1f 100%) !important;
+    background-size:300% 100% !important;animation:shimmer 2.4s linear infinite;color:#f4ffe8}
+  tbody tr.hl td.sticky{background:linear-gradient(100deg,#2f4322 0%,#48662f 50%,#2f4322 100%) !important;
+    background-size:300% 100% !important;animation:shimmer 2.4s linear infinite}
+  @keyframes shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
   .pc{color:var(--pc)} .ec{color:var(--ec)} .tot{color:var(--dim)}
   .up{color:#7ee787} .down{color:#ff7b72} .flat{color:var(--dim)}
+  .oc{font-style:italic;color:var(--oc);font-weight:600;margin-left:6px}
+  .stock{color:var(--dim)}
   .arrow{margin-left:5px;font-size:10px;color:var(--accent)}
-  .views{display:inline-flex;gap:4px;margin-left:10px;vertical-align:middle}
+  .views{display:inline-flex;gap:4px;margin-left:10px;vertical-align:middle;flex-wrap:wrap}
   .views .tab.active{border-color:var(--accent);color:#fff;background:#1b3658}
+  .views .sep{width:1px;background:var(--line);margin:0 4px;align-self:stretch}
   .power{display:inline-flex;align-items:center;gap:6px;color:var(--dim);white-space:nowrap}
   .power input{accent-color:var(--accent);cursor:pointer}
+  #help{margin-left:auto}
   .rs{position:absolute;top:0;right:0;width:13px;height:100%;cursor:col-resize;z-index:5}
   .rs:hover{background:linear-gradient(90deg,transparent,var(--accent))}
   tfoot td{color:var(--dim);border:none;padding:8px}
   .hint{color:var(--dim);font-size:11px;margin-top:6px}
+  .hint b{color:var(--txt);font-weight:600}
+  dialog{background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:8px;
+    max-width:760px;width:calc(100% - 40px);padding:18px 22px;font-size:13px;line-height:1.5}
+  dialog::backdrop{background:rgba(0,0,0,.6)}
+  dialog h2{margin:0 0 10px;font-size:16px}
+  dialog h3{margin:14px 0 4px;font-size:13px;color:var(--accent)}
+  dialog p{margin:0 0 6px}
+  dialog .close{float:right}
 </style>
 </head>
 <body>
 <header>
-  <h1>Intel Desktop CPUs — 6th Gen onwards <span id="count"></span>
+  <h1>Desktop CPUs — Intel 6th Gen onwards &amp; AMD Ryzen <span id="count"></span>
     <span class="views" id="views">
-      <button class="mini tab active" data-game="">CPU specs</button>
+      <button class="mini tab active" data-vendor="Intel">Intel</button>
+      <button class="mini tab active" data-vendor="AMD">AMD</button>
+      <span class="sep"></span>
       <button class="mini tab" data-game="aoe2de">AOE2DE performance</button>
       <button class="mini tab" data-game="aoe3de">AOE3DE performance</button>
       <button class="mini tab" data-game="ra2yr">RA2YR performance</button>
     </span>
+    <button class="mini" id="help">Help</button>
   </h1>
   <div class="controls">
-    <input id="search" placeholder='Search models — comma separated, e.g.  6700k, 9500, 14900'>
+    <input id="search" placeholder='Search models — comma separated, e.g.  6700k, 9500, 5800x'>
     <div class="filters" id="filters"><span class="lbl">Show suffix:</span></div>
     <label class="power"><input type="checkbox" id="unlimitedPower"> Unlimited power / safe OC estimate</label>
     <button class="mini" id="reset">Reset</button>
   </div>
-  <div class="hint">Select any combination of game tabs · estimates use the fastest CPU as 100% · “Unlimited power” models good air cooling, removed power limits, and modest safe extra clock headroom</div>
+  <div class="hint" id="hint"></div>
 </header>
+
+<dialog id="helpBox">
+  <button class="mini close" id="helpClose">Close</button>
+  <h2>How to use this table</h2>
+  <h3>Vendor buttons (Intel / AMD)</h3>
+  <p>Toggle which vendor's CPUs are listed. Both on shows everything, sorted by generation in chronological order (newest first) with Intel listed above AMD when generations tie.</p>
+  <h3>Game performance tabs (AOE2DE, AOE3DE, RA2YR)</h3>
+  <p>Each tab adds an estimated relative-performance column; any combination can be open at once. The fastest CPU in that game is 100%. Values are a model (generation IPC × clock × a small thread bonus), not measured benchmarks.</p>
+  <h3>Unlimited power / safe OC estimate</h3>
+  <p>Assumes good air cooling, power limits removed, and the highest safe voltage. Unlocked parts (Intel K/KF/KS, AMD X/XT/non-X3D via PBO or manual multiplier) get extra clock; locked parts simply hold their turbo indefinitely. Max Turbo and TDP then show the stock value with the estimated value in <i style="color:var(--oc)">italic gold</i> beside it, and the game percentages are recalculated.</p>
+  <h3>Search</h3>
+  <p>Type any part of a model, generation, architecture or vendor. Separate several terms with commas to show them together, e.g. <code>6700k, 9500, 5800x</code>.</p>
+  <h3>Suffix filters</h3>
+  <p>Untick a suffix (K, F, T, X, X3D, G …) to hide those models. “No suffix” covers plain models. Counts show how many models each suffix has.</p>
+  <h3>Sorting</h3>
+  <p>Click a column header to sort; click again to reverse. Shift-click adds secondary sort keys. Without a sort the table uses newest generation first, then tier and clock.</p>
+  <h3>Column widths</h3>
+  <p>Drag a header's right edge to resize. Double-click the edge to fit the widest cell exactly; double-click again to shrink to the narrowest. Columns fit their widest value automatically on load and whenever the data shown changes.</p>
+  <h3>Highlighting rows</h3>
+  <p>Click any row to give it a moving shimmer so it stands out; click it again to remove the highlight. Highlights survive sorting and filtering.</p>
+  <h3>Generation banding</h3>
+  <p>Consecutive rows of the same generation share a shade and a bright divider marks where a new generation starts.</p>
+  <h3>Settings line</h3>
+  <p>The grey line under the controls always describes the current settings (vendors, tabs, power mode, filters, sort, highlights).</p>
+  <h3>Columns</h3>
+  <p>Process Node in nm; Cores / Threads shows P- and E-cores with (HT)/(no HT) or SMT; IPC uplift is a generation-level estimate versus the vendor's previous generation; Year is the SKU's launch year; sticky Processor Model column and headers stay visible while scrolling.</p>
+  <h3>Reset</h3>
+  <p>Clears search, filters, sort, tabs, power mode, highlights and column widths.</p>
+</dialog>
 
 <div class="wrap" id="wrap">
   <table id="tbl">
@@ -102,23 +163,31 @@
 
 <script>
 /* ---------------- generation metadata ---------------- */
+/* order = launch year + month/12, used for chronological ordering across vendors */
 const GENS = {
-  6:{name:"6th Gen",arch:"Skylake",node:"14",socket:"LGA 1151",chipset:"100-series (Z170/H170/B150)",mem:"DDR4-1866–2133 / DDR3L-1333–1600",ipc:10},
-  7:{name:"7th Gen",arch:"Kaby Lake",node:"14",socket:"LGA 1151",chipset:"200-series (Z270/H270/B250)",mem:"DDR4-2133–2400 / DDR3L-1333–1600",ipc:0},
-  8:{name:"8th Gen",arch:"Coffee Lake",node:"14",socket:"LGA 1151v2",chipset:"300-series (Z370/H370/B360)",mem:"DDR4-2133–2666",ipc:0},
-  9:{name:"9th Gen",arch:"Coffee Lake Refresh",node:"14",socket:"LGA 1151v2",chipset:"300-series (Z390/B365/H310)",mem:"DDR4-2133–2666",ipc:0},
-  10:{name:"10th Gen",arch:"Comet Lake",node:"14",socket:"LGA 1200",chipset:"400-series (Z490/H470/B460)",mem:"DDR4-2133–2933",ipc:0},
-  11:{name:"11th Gen",arch:"Cypress Cove (Rocket Lake)",node:"14",socket:"LGA 1200",chipset:"500-series (Z590/B560) / 400-series",mem:"DDR4-2133–3200",ipc:19},
-  12:{name:"12th Gen",arch:"Golden Cove + Gracemont (Alder Lake)",node:"10",socket:"LGA 1700",chipset:"600-series (Z690/B660/H610)",mem:"DDR5-4000–4800 / DDR4-2133–3200",ipc:19},
-  13:{name:"13th Gen",arch:"Raptor Cove + Gracemont (Raptor Lake)",node:"10",socket:"LGA 1700",chipset:"700/600-series (Z790/B760)",mem:"DDR5-4000–5600 / DDR4-2133–3200",ipc:2},
-  14:{name:"14th Gen",arch:"Raptor Cove + Gracemont (Raptor Lake Refresh)",node:"10",socket:"LGA 1700",chipset:"700/600-series (Z790/B760)",mem:"DDR5-4000–5600 / DDR4-2133–3200",ipc:0},
-  15:{name:"Core Ultra 200S / 200S Plus",arch:"Lion Cove + Skymont (Arrow Lake)",node:"3",socket:"LGA 1851",chipset:"800-series (Z890/B860/H810)",mem:"DDR5-4800–7200",ipc:9}
+  I6:{vendor:"Intel",name:"6th Gen",arch:"Skylake",node:"14",socket:"LGA 1151",chipset:"100-series (Z170/H170/B150)",mem:"DDR4-1866–2133 / DDR3L-1333–1600",ipc:10,year:2015,order:2015.67},
+  I7:{vendor:"Intel",name:"7th Gen",arch:"Kaby Lake",node:"14",socket:"LGA 1151",chipset:"200-series (Z270/H270/B250)",mem:"DDR4-2133–2400 / DDR3L-1333–1600",ipc:0,year:2017,order:2017.0},
+  I8:{vendor:"Intel",name:"8th Gen",arch:"Coffee Lake",node:"14",socket:"LGA 1151v2",chipset:"300-series (Z370/H370/B360)",mem:"DDR4-2133–2666",ipc:0,year:2017,order:2017.83},
+  I9:{vendor:"Intel",name:"9th Gen",arch:"Coffee Lake Refresh",node:"14",socket:"LGA 1151v2",chipset:"300-series (Z390/B365/H310)",mem:"DDR4-2133–2666",ipc:0,year:2018,order:2018.83},
+  I10:{vendor:"Intel",name:"10th Gen",arch:"Comet Lake",node:"14",socket:"LGA 1200",chipset:"400-series (Z490/H470/B460)",mem:"DDR4-2133–2933",ipc:0,year:2020,order:2020.33},
+  I11:{vendor:"Intel",name:"11th Gen",arch:"Cypress Cove (Rocket Lake)",node:"14",socket:"LGA 1200",chipset:"500-series (Z590/B560) / 400-series",mem:"DDR4-2133–3200",ipc:19,year:2021,order:2021.25},
+  I12:{vendor:"Intel",name:"12th Gen",arch:"Golden Cove + Gracemont (Alder Lake)",node:"10",socket:"LGA 1700",chipset:"600-series (Z690/B660/H610)",mem:"DDR5-4000–4800 / DDR4-2133–3200",ipc:19,year:2021,order:2021.92},
+  I13:{vendor:"Intel",name:"13th Gen",arch:"Raptor Cove + Gracemont (Raptor Lake)",node:"10",socket:"LGA 1700",chipset:"700/600-series (Z790/B760)",mem:"DDR5-4000–5600 / DDR4-2133–3200",ipc:2,year:2022,order:2022.83},
+  I14:{vendor:"Intel",name:"14th Gen",arch:"Raptor Cove + Gracemont (Raptor Lake Refresh)",node:"10",socket:"LGA 1700",chipset:"700/600-series (Z790/B760)",mem:"DDR5-4000–5600 / DDR4-2133–3200",ipc:0,year:2023,order:2023.83},
+  I15:{vendor:"Intel",name:"Core Ultra 200S / 200S Plus",arch:"Lion Cove + Skymont (Arrow Lake)",node:"3",socket:"LGA 1851",chipset:"800-series (Z890/B860/H810)",mem:"DDR5-4800–7200",ipc:9,year:2024,order:2024.83},
+  A1:{vendor:"AMD",name:"Ryzen 1000 (Zen)",arch:"Zen (Summit Ridge)",node:"14",socket:"AM4",chipset:"300-series (X370/B350/A320)",mem:"DDR4-2133–2667",ipc:52,year:2017,order:2017.17},
+  A2:{vendor:"AMD",name:"Ryzen 2000 (Zen+)",arch:"Zen+ (Pinnacle Ridge)",node:"12",socket:"AM4",chipset:"400-series (X470/B450) / 300-series",mem:"DDR4-2133–2933",ipc:3,year:2018,order:2018.33},
+  A3:{vendor:"AMD",name:"Ryzen 3000 (Zen 2)",arch:"Zen 2 (Matisse)",node:"7",socket:"AM4",chipset:"500-series (X570/B550) / 400-series",mem:"DDR4-2133–3200",ipc:15,year:2019,order:2019.5},
+  A4:{vendor:"AMD",name:"Ryzen 5000 (Zen 3)",arch:"Zen 3 (Vermeer)",node:"7",socket:"AM4",chipset:"500-series (X570/B550/A520) / 400-series",mem:"DDR4-2133–3200",ipc:19,year:2020,order:2020.83},
+  A5:{vendor:"AMD",name:"Ryzen 7000 (Zen 4)",arch:"Zen 4 (Raphael)",node:"5",socket:"AM5",chipset:"600-series (X670E/X670/B650E/B650/A620)",mem:"DDR5-4800–5200",ipc:13,year:2022,order:2022.75},
+  A6:{vendor:"AMD",name:"Ryzen 9000 (Zen 5)",arch:"Zen 5 (Granite Ridge)",node:"4",socket:"AM5",chipset:"800-series (X870E/X870/B850/B840) / 600-series",mem:"DDR5-4800–5600",ipc:16,year:2024,order:2024.58}
 };
 
 /* cores helper: C(total, ht) classic | H(p,e,pHT) hybrid */
 const C=(c,ht)=>({c,ht}), H=(p,e,pht=true)=>({p,e,pht});
 
-/* rows: [model, gen, cores, maxTurboGHz, L3 MB, TDP(base) W] */
+/* rows: [model, gen, cores, maxTurboGHz, L3 MB, TDP(base) W, overrides?]
+   Intel gens are written as plain numbers (6..15) and mapped to I6..I15 below. */
 const RAW = [
 /* ---- 6th gen Skylake ---- */
 ["i7-6700K",6,C(4,1),4.2,8,91],["i7-6700",6,C(4,1),4.0,8,65],["i7-6700T",6,C(4,1),3.6,8,35],
@@ -251,22 +320,99 @@ const RAW = [
 ["Celeron G5905T",11,C(2,0),3.3,4,35,{arch:"Comet Lake (rebrand)",node:"14",ipc:0}],
 ["Pentium Gold G7400",12,C(2,1),3.7,6,46],["Pentium Gold G7400T",12,C(2,1),3.1,6,35],
 ["Celeron G6900",12,C(2,0),3.4,4,46],["Celeron G6900T",12,C(2,0),2.8,4,35],
-["Intel Processor 300",13,C(2,1),3.9,6,46],["Intel Processor 300T",13,C(2,1),3.4,6,35]
+["Intel Processor 300",13,C(2,1),3.9,6,46],["Intel Processor 300T",13,C(2,1),3.4,6,35],
+/* ================= AMD ================= */
+/* ---- Ryzen 1000 Zen (Summit Ridge) 2017 ---- */
+["Ryzen 7 1800X","A1",C(8,1),4.0,16,95],["Ryzen 7 1700X","A1",C(8,1),3.8,16,95],["Ryzen 7 1700","A1",C(8,1),3.7,16,65],
+["Ryzen 5 1600X","A1",C(6,1),4.0,16,95],["Ryzen 5 1600","A1",C(6,1),3.6,16,65],["Ryzen 5 1500X","A1",C(4,1),3.7,16,65],
+["Ryzen 5 1400","A1",C(4,1),3.4,8,65],["Ryzen 3 1300X","A1",C(4,0),3.7,8,65],["Ryzen 3 1200","A1",C(4,0),3.4,8,65],
+/* Raven Ridge APUs (Zen, 2018) */
+["Ryzen 5 2400G","A1",C(4,1),3.9,4,65,{arch:"Zen (Raven Ridge APU)",year:2018}],
+["Ryzen 5 2400GE","A1",C(4,1),3.8,4,35,{arch:"Zen (Raven Ridge APU)",year:2018}],
+["Ryzen 3 2200G","A1",C(4,0),3.7,4,65,{arch:"Zen (Raven Ridge APU)",year:2018}],
+["Ryzen 3 2200GE","A1",C(4,0),3.6,4,35,{arch:"Zen (Raven Ridge APU)",year:2018}],
+["Athlon 200GE","A1",C(2,1),3.2,4,35,{arch:"Zen (Raven Ridge APU)",year:2018}],
+["Athlon 220GE","A1",C(2,1),3.4,4,35,{arch:"Zen (Raven Ridge APU)",year:2018}],
+["Athlon 240GE","A1",C(2,1),3.5,4,35,{arch:"Zen (Raven Ridge APU)",year:2018}],
+/* ---- Ryzen 2000 Zen+ (Pinnacle Ridge) 2018 ---- */
+["Ryzen 7 2700X","A2",C(8,1),4.3,16,105],["Ryzen 7 2700","A2",C(8,1),4.1,16,65],
+["Ryzen 5 2600X","A2",C(6,1),4.2,16,95],["Ryzen 5 2600","A2",C(6,1),3.9,16,65],
+["Ryzen 5 2500X","A2",C(4,1),4.0,8,65],["Ryzen 3 2300X","A2",C(4,0),4.0,8,65],
+/* Picasso APUs (Zen+, 2019) */
+["Ryzen 5 3400G","A2",C(4,1),4.2,4,65,{arch:"Zen+ (Picasso APU)",year:2019}],
+["Ryzen 5 3400GE","A2",C(4,1),4.0,4,35,{arch:"Zen+ (Picasso APU)",year:2019}],
+["Ryzen 3 3200G","A2",C(4,0),4.0,4,65,{arch:"Zen+ (Picasso APU)",year:2019}],
+["Ryzen 3 3200GE","A2",C(4,0),3.8,4,35,{arch:"Zen+ (Picasso APU)",year:2019}],
+["Athlon 3000G","A2",C(2,1),3.5,4,35,{arch:"Zen (Raven Ridge APU)",node:"14",year:2019}],
+/* ---- Ryzen 3000 Zen 2 (Matisse) 2019 ---- */
+["Ryzen 9 3950X","A3",C(16,1),4.7,64,105],["Ryzen 9 3900XT","A3",C(12,1),4.7,64,105,{year:2020}],
+["Ryzen 9 3900X","A3",C(12,1),4.6,64,105],["Ryzen 9 3900","A3",C(12,1),4.3,64,65],
+["Ryzen 7 3800XT","A3",C(8,1),4.7,32,105,{year:2020}],["Ryzen 7 3800X","A3",C(8,1),4.5,32,105],
+["Ryzen 7 3700X","A3",C(8,1),4.4,32,65],
+["Ryzen 5 3600XT","A3",C(6,1),4.5,32,95,{year:2020}],["Ryzen 5 3600X","A3",C(6,1),4.4,32,95],
+["Ryzen 5 3600","A3",C(6,1),4.2,32,65],["Ryzen 5 3500X","A3",C(6,0),4.1,32,65],["Ryzen 5 3500","A3",C(6,0),4.1,16,65],
+["Ryzen 3 3300X","A3",C(4,1),4.3,16,65,{year:2020}],["Ryzen 3 3100","A3",C(4,1),3.9,16,65,{year:2020}],
+/* Renoir APUs (Zen 2, 2020) */
+["Ryzen 7 4700G","A3",C(8,1),4.4,8,65,{arch:"Zen 2 (Renoir APU)",year:2020}],
+["Ryzen 7 4700GE","A3",C(8,1),4.3,8,35,{arch:"Zen 2 (Renoir APU)",year:2020}],
+["Ryzen 5 4600G","A3",C(6,1),4.2,8,65,{arch:"Zen 2 (Renoir APU)",year:2020}],
+["Ryzen 5 4600GE","A3",C(6,1),4.2,8,35,{arch:"Zen 2 (Renoir APU)",year:2020}],
+["Ryzen 5 4500","A3",C(6,1),4.1,8,65,{arch:"Zen 2 (Renoir, no iGPU)",year:2022}],
+["Ryzen 3 4300G","A3",C(4,1),4.0,4,65,{arch:"Zen 2 (Renoir APU)",year:2020}],
+["Ryzen 3 4300GE","A3",C(4,1),4.0,4,35,{arch:"Zen 2 (Renoir APU)",year:2020}],
+["Ryzen 3 4100","A3",C(4,1),4.0,4,65,{arch:"Zen 2 (Renoir, no iGPU)",year:2022}],
+/* ---- Ryzen 5000 Zen 3 (Vermeer) 2020 ---- */
+["Ryzen 9 5950X","A4",C(16,1),4.9,64,105],["Ryzen 9 5900X","A4",C(12,1),4.8,64,105],
+["Ryzen 9 5900XT","A4",C(16,1),4.8,64,105,{year:2024}],
+["Ryzen 7 5800X3D","A4",C(8,1),4.5,96,105,{year:2022}],["Ryzen 7 5800XT","A4",C(8,1),4.8,32,105,{year:2024}],
+["Ryzen 7 5800X","A4",C(8,1),4.7,32,105],["Ryzen 7 5700X3D","A4",C(8,1),4.1,96,105,{year:2024}],
+["Ryzen 7 5700X","A4",C(8,1),4.6,32,65,{year:2022}],
+["Ryzen 7 5700","A4",C(8,1),4.6,16,65,{arch:"Zen 3 (Cezanne, no iGPU)",year:2024}],
+["Ryzen 5 5600X3D","A4",C(6,1),4.4,96,105,{year:2023}],["Ryzen 5 5600X","A4",C(6,1),4.6,32,65],
+["Ryzen 5 5600","A4",C(6,1),4.4,32,65,{year:2022}],["Ryzen 5 5600T","A4",C(6,1),4.5,32,65,{year:2024}],
+["Ryzen 5 5500","A4",C(6,1),4.2,16,65,{arch:"Zen 3 (Cezanne, no iGPU)",year:2022}],
+/* Cezanne APUs (Zen 3, 2021) */
+["Ryzen 7 5700G","A4",C(8,1),4.6,16,65,{arch:"Zen 3 (Cezanne APU)",year:2021}],
+["Ryzen 7 5700GE","A4",C(8,1),4.6,16,35,{arch:"Zen 3 (Cezanne APU)",year:2021}],
+["Ryzen 5 5600G","A4",C(6,1),4.4,16,65,{arch:"Zen 3 (Cezanne APU)",year:2021}],
+["Ryzen 5 5600GE","A4",C(6,1),4.4,16,35,{arch:"Zen 3 (Cezanne APU)",year:2021}],
+["Ryzen 5 5600GT","A4",C(6,1),4.6,16,65,{arch:"Zen 3 (Cezanne APU)",year:2024}],
+["Ryzen 5 5500GT","A4",C(6,1),4.4,16,65,{arch:"Zen 3 (Cezanne APU)",year:2024}],
+["Ryzen 3 5300G","A4",C(4,1),4.2,8,65,{arch:"Zen 3 (Cezanne APU)",year:2021}],
+/* ---- Ryzen 7000 Zen 4 (Raphael) 2022 ---- */
+["Ryzen 9 7950X3D","A5",C(16,1),5.7,128,120,{year:2023}],["Ryzen 9 7950X","A5",C(16,1),5.7,64,170],
+["Ryzen 9 7900X3D","A5",C(12,1),5.6,128,120,{year:2023}],["Ryzen 9 7900X","A5",C(12,1),5.6,64,170],
+["Ryzen 9 7900","A5",C(12,1),5.4,64,65,{year:2023}],
+["Ryzen 7 7800X3D","A5",C(8,1),5.0,96,120,{year:2023}],["Ryzen 7 7700X","A5",C(8,1),5.4,32,105],
+["Ryzen 7 7700","A5",C(8,1),5.3,32,65,{year:2023}],
+["Ryzen 5 7600X3D","A5",C(6,1),4.7,96,65,{year:2024}],["Ryzen 5 7600X","A5",C(6,1),5.3,32,105],
+["Ryzen 5 7600","A5",C(6,1),5.1,32,65,{year:2023}],["Ryzen 5 7500F","A5",C(6,1),5.0,32,65,{year:2023}],
+/* Phoenix APUs / F parts (Zen 4, 2024) */
+["Ryzen 7 8700G","A5",C(8,1),5.1,16,65,{arch:"Zen 4 (Phoenix APU)",node:"4",year:2024}],
+["Ryzen 7 8700F","A5",C(8,1),5.0,16,65,{arch:"Zen 4 (Phoenix, no iGPU)",node:"4",year:2024}],
+["Ryzen 5 8600G","A5",C(6,1),5.0,16,65,{arch:"Zen 4 (Phoenix APU)",node:"4",year:2024}],
+["Ryzen 5 8500G","A5",C(6,1),5.0,16,65,{arch:"Zen 4 + Zen 4c (Phoenix 2 APU)",node:"4",year:2024}],
+["Ryzen 5 8400F","A5",C(6,1),4.7,16,65,{arch:"Zen 4 + Zen 4c (Phoenix 2, no iGPU)",node:"4",year:2024}],
+["Ryzen 3 8300G","A5",C(4,1),4.9,8,65,{arch:"Zen 4 + Zen 4c (Phoenix 2 APU)",node:"4",year:2024}],
+/* ---- Ryzen 9000 Zen 5 (Granite Ridge) 2024 ---- */
+["Ryzen 9 9950X3D","A6",C(16,1),5.7,128,170,{year:2025}],["Ryzen 9 9950X","A6",C(16,1),5.7,64,170],
+["Ryzen 9 9900X3D","A6",C(12,1),5.5,128,120,{year:2025}],["Ryzen 9 9900X","A6",C(12,1),5.6,64,120],
+["Ryzen 7 9800X3D","A6",C(8,1),5.2,96,120],["Ryzen 7 9700X","A6",C(8,1),5.5,32,65],
+["Ryzen 5 9600X","A6",C(6,1),5.4,32,65],["Ryzen 5 9600","A6",C(6,1),5.2,32,65,{year:2025}]
 ];
 
 /* ---------------- derive ---------------- */
 function suffixOf(m){
   const t = m.trim().toUpperCase();
-  const mm = t.match(/(KS|KF|K|F|T|S)(?: PLUS)?$/);
+  const mm = t.match(/(X3D|XT|KS|KF|GE|GT|K|F|T|S|X|G|E)(?: PLUS)?$/);
   if(!mm) return "—";
-  // guard: "Core Ultra 5 245" ends in digit, fine. Only letter suffixes matched.
   return mm[1];
 }
 function tierOf(m){
-  if(/Ultra 9/.test(m)) return 9; if(/Ultra 7/.test(m)) return 7; if(/Ultra 5/.test(m)) return 5;
+  if(/Ultra 9|Ryzen 9/.test(m)) return 9; if(/Ultra 7|Ryzen 7/.test(m)) return 7; if(/Ultra 5|Ryzen 5/.test(m)) return 5;
   if(/^i9/.test(m)) return 9; if(/^i7/.test(m)) return 7; if(/^i5/.test(m)) return 5;
-  if(/^i3/.test(m)) return 3;
-  if(/^Pentium/.test(m)) return 2; if(/^Intel Processor/.test(m)) return 2;
+  if(/^i3|Ryzen 3/.test(m)) return 3;
+  if(/^Pentium|^Intel Processor|^Athlon/.test(m)) return 2;
   if(/^Celeron/.test(m)) return 1;
   return 3;
 }
@@ -274,35 +420,87 @@ function familyOf(m){
   if(/^Celeron/.test(m)) return "Celeron";
   if(/^Pentium/.test(m)) return "Pentium";
   if(/^Intel Processor/.test(m)) return "Intel Processor";
+  if(/^Athlon/.test(m)) return "Athlon";
+  if(/^Ryzen/.test(m)) return "Ryzen";
   return "Core";
 }
+/* Intel SKU launch year: K-series launch with the generation, the rest of the
+   stack follows at the next CES for gens 8/9/12–15. */
+const INTEL_YEAR_OVERRIDES={"i9-9900KS":2019,"i9-12900KS":2022,"i9-13900KS":2023,"i9-14900KS":2024,
+  "i7-8700":2017,"i5-8400":2017,"i3-8100":2017,"i3-8350K":2017,"i3-6098P":2016,"Intel Processor 300":2024,"Intel Processor 300T":2024};
+function intelYear(model,genNum,g){
+  if(INTEL_YEAR_OVERRIDES[model]!==undefined) return INTEL_YEAR_OVERRIDES[model];
+  if(/Plus$/.test(model)) return 2026;
+  const unlocked=/(KS|KF|K)(?: Plus)?$/.test(model);
+  if(!unlocked && [8,9,12,13,14,15].includes(genNum)) return g.year+1;
+  return g.year;
+}
 const DATA = RAW.map(r=>{
-  const [model,gen,co,turbo,l3,tdp,ovr]=r;
-  const g=Object.assign({},GENS[gen],ovr||{});
+  const [model,genRaw,co,turbo,l3,tdp,ovr]=r;
+  const genKey=typeof genRaw==="number"?"I"+genRaw:genRaw;
+  const g=Object.assign({},GENS[genKey],ovr||{});
+  const vendor=g.vendor;
   let cores,threads,coresHtml;
+  const smt=vendor==="AMD"?"SMT":"HT";
   if(co.c!==undefined){
     cores=co.c; threads=co.c*(co.ht?2:1);
-    coresHtml=`<span class="pc">${co.c}C ${co.ht?"(HT)":"(no HT)"}</span><span class="tot"> · ${cores}C / ${threads}T</span>`;
+    coresHtml=`<span class="pc">${co.c}C ${co.ht?"("+smt+")":"(no "+smt+")"}</span><span class="tot"> · ${cores}C / ${threads}T</span>`;
   }else{
     cores=co.p+co.e; threads=co.p*(co.pht?2:1)+co.e;
     coresHtml=`<span class="pc">${co.p}P ${co.pht?"(HT)":"(no HT)"}</span> + <span class="ec">${co.e}E (no HT)</span><span class="tot"> · ${cores}C / ${threads}T</span>`;
   }
-  return {model,gen,genName:g.name,arch:g.arch,node:g.node,cores,threads,coresHtml,
-    turbo,l3,socket:g.socket,chipset:g.chipset,mem:g.mem,ipc:g.ipc,tdp,
-    sfx:suffixOf(model),tier:tierOf(model),family:familyOf(model)};
+  const year=(ovr&&ovr.year)||(vendor==="Intel"?intelYear(model,+genRaw,g):g.year);
+  const sfx=suffixOf(model);
+  const unlocked=vendor==="Intel"?["K","KF","KS"].includes(sfx):(sfx!=="X3D"||genKey==="A6") && !/^Athlon/.test(model);
+  return {model,vendor,gen:genKey,genOrder:g.order,genName:g.name,arch:g.arch,node:g.node,cores,threads,coresHtml,
+    pcores:co.p!==undefined?co.p:co.c,ecores:co.e||0,
+    turbo,l3,socket:g.socket,chipset:g.chipset,mem:g.mem,ipc:g.ipc,tdp,year,
+    sfx,tier:tierOf(model),family:familyOf(model),unlocked};
 });
+
+/* ---------------- unlimited power / OC estimates ----------------
+   Clock: unlocked parts get up to +delta GHz but never above the generation's
+   typical safe-voltage ceiling on good air; locked parts keep their stock turbo.
+   Power: sustained all-core draw ≈ per-core watts × cores + uncore, ×1.2 when
+   overclocked. Estimates only. */
+const OC_CLOCK={I6:[0.5,4.8],I7:[0.5,5.0],I8:[0.4,5.1],I9:[0.3,5.2],I10:[0.2,5.4],I11:[0.2,5.4],
+  I12:[0.3,5.4],I13:[0.2,6.0],I14:[0.2,6.2],I15:[0.2,5.9],
+  A1:[0.2,4.1],A2:[0.2,4.35],A3:[0.1,4.7],A4:[0.2,5.0],A5:[0.2,5.9],A6:[0.2,5.9]};
+const OC_POWER={I6:[18,0,15],I7:[18,0,15],I8:[18,0,15],I9:[18,0,15],I10:[19,0,15],I11:[24,0,15],
+  I12:[22,6,15],I13:[22,5,15],I14:[22,5,15],I15:[16,5,15],
+  A1:[15,0,20],A2:[15,0,20],A3:[10,0,20],A4:[11,0,20],A5:[12,0,20],A6:[12,0,20]};
+function ocEstimate(r){
+  const [delta,cap]=OC_CLOCK[r.gen];
+  let turbo=r.turbo;
+  if(r.unlocked){
+    turbo=Math.max(r.turbo,Math.min(cap,r.turbo+delta));
+    if(r.sfx==="X3D") turbo=r.turbo+0.2; /* only unlocked Zen 5 X3D reaches here */
+  }
+  const [pw,ew,unc]=OC_POWER[r.gen];
+  const apu=/G|GE|GT/.test(r.sfx)||/APU|Phoenix|Cezanne|Renoir|Raven|Picasso/.test(r.arch);
+  let tdp=r.pcores*pw+r.ecores*ew+(apu?unc*0.5:unc);
+  if(r.unlocked) tdp*=1.2; else tdp*=0.85;
+  if(r.sfx==="X3D") tdp*=0.8;
+  tdp=Math.max(Math.round(tdp/5)*5, r.tdp);
+  return {turbo:Math.round(turbo*10)/10, tdp};
+}
+DATA.forEach(r=>{ r.oc=ocEstimate(r); });
+const effTurbo=r=>state.unlimitedPower?r.oc.turbo:r.turbo;
+const effTdp=r=>state.unlimitedPower?r.oc.tdp:r.tdp;
 
 /* ---------------- columns ---------------- */
 const COLS=[
   {k:"model",  t:"Processor Model", w:190, sticky:true, num:false,
-   v:r=>r.model, h:r=>`<span class="model">${r.model}</span>`+(r.sfx!=="—"?`<span class="sfx s-${r.sfx}">${r.sfx}</span>`:"")},
-  {k:"gen",    t:"Generation", w:145, sort:"num", v:r=>r.gen, h:r=>r.genName, txt:r=>r.genName},
+   v:r=>r.model, h:r=>`<span class="vendor v-${r.vendor}">${r.vendor}</span><span class="model">${r.model}</span>`+(r.sfx!=="—"?`<span class="sfx s-${r.sfx}">${r.sfx}</span>`:"")},
+  {k:"gen",    t:"Generation", w:145, sort:"num", v:r=>r.genOrder, h:r=>r.genName, txt:r=>r.genName},
   {k:"arch",   t:"Architecture", w:300, v:r=>r.arch},
   {k:"node",   t:"Process Node", w:110, num:true, v:r=>+r.node, txt:r=>r.node+" nm",
    h:r=>r.node+" nm"},
   {k:"cores",  t:"Cores / Threads", w:250, num:true, v:r=>r.threads, h:r=>r.coresHtml,
    txt:r=>r.coresHtml.replace(/<[^>]+>/g,"")},
-  {k:"turbo",  t:"Max Turbo", w:100, num:true, v:r=>r.turbo, txt:r=>r.turbo.toFixed(1)+" GHz"},
+  {k:"turbo",  t:"Max Turbo", w:100, num:true, v:r=>effTurbo(r),
+   txt:r=>state.unlimitedPower?`${r.turbo.toFixed(1)} → ${r.oc.turbo.toFixed(1)} GHz`:r.turbo.toFixed(1)+" GHz",
+   h:r=>state.unlimitedPower?`<span class="stock">${r.turbo.toFixed(1)}</span><i class="oc">${r.oc.turbo.toFixed(1)} GHz</i>`:r.turbo.toFixed(1)+" GHz"},
   {k:"l3",     t:"L3 Cache", w:95, num:true, v:r=>r.l3, txt:r=>r.l3+" MB"},
   {k:"socket", t:"Socket", w:110, v:r=>r.socket},
   {k:"chipset",t:"Chipset", w:275, v:r=>r.chipset},
@@ -310,23 +508,27 @@ const COLS=[
   {k:"ipc",    t:"IPC Uplift vs Prev. Gen", w:170, num:true, v:r=>r.ipc,
    txt:r=>(r.ipc>0?"+":"")+r.ipc+"%",
    h:r=>`<span class="${r.ipc>0?'up':(r.ipc<0?'down':'flat')}">${r.ipc>0?"+":""}${r.ipc}%</span>`},
-  {k:"tdp",    t:"TDP", w:85, num:true, v:r=>r.tdp, txt:r=>r.tdp+" W"}
+  {k:"tdp",    t:"TDP", w:85, num:true, v:r=>effTdp(r),
+   txt:r=>state.unlimitedPower?`${r.tdp} → ${r.oc.tdp} W`:r.tdp+" W",
+   h:r=>state.unlimitedPower?`<span class="stock">${r.tdp}</span><i class="oc">${r.oc.tdp} W</i>`:r.tdp+" W"},
+  {k:"year",   t:"Year", w:70, num:true, v:r=>r.year}
 ];
 const GAME_DEFS=[
   ["aoe2de","AOE2DE Performance"],
   ["aoe3de","AOE3DE Performance"],
   ["ra2yr","RA2YR Performance"]
 ];
+/* cumulative per-vendor IPC factor; AMD Zen 1 anchored to Intel Skylake-class IPC */
 const generationFactor={};
-Object.keys(GENS).map(Number).sort((a,b)=>a-b).forEach(gen=>{
-  const prev=gen-1;
-  generationFactor[gen]=(generationFactor[prev]||1)*(1+GENS[gen].ipc/100);
-});
+(function(){
+  const chains={Intel:["I6","I7","I8","I9","I10","I11","I12","I13","I14","I15"],AMD:["A1","A2","A3","A4","A5","A6"]};
+  chains.Intel.reduce((f,k)=>generationFactor[k]=f*(1+GENS[k].ipc/100),1/(1+GENS.I6.ipc/100));
+  chains.AMD.reduce((f,k,idx)=>generationFactor[k]=idx===0?f:f*(1+GENS[k].ipc/100),0.97);
+})();
 function gameScore(r,game,unlimitedPower=false){
-  const clockFactor=unlimitedPower
-    ? (["K","KS","KF"].includes(r.sfx)?1.08:1.03)
-    : 1;
-  const serial=r.turbo*clockFactor*(generationFactor[r.gen]||1);
+  const turbo=unlimitedPower?r.oc.turbo:r.turbo;
+  const sustain=unlimitedPower&&!r.unlocked?1.02:1;
+  const serial=turbo*sustain*(generationFactor[r.gen]||1);
   const thread=Math.log2(Math.max(1,r.threads));
   const weight=game==="aoe3de"?0.28:(game==="ra2yr"?0.08:0.15);
   return serial*(1-weight+weight*thread/5);
@@ -354,13 +556,16 @@ GAME_DEFS.forEach(([game,title])=>{
 COLS.forEach(c=>{ if(!c.txt) c.txt=r=>String(c.v(r)); if(!c.h) c.h=r=>c.txt(r); });
 
 /* ---------------- state ---------------- */
-const SUFFIXES=["—","S","T","K","F","KS","KF"];
-const SLABEL={"—":"No suffix","S":"S","T":"T","K":"K","F":"F","KS":"KS","KF":"KF"};
-const state={sort:[], filters:new Set(SUFFIXES), query:"", fitState:{}, games:new Set(), unlimitedPower:false};
+const SUFFIXES=["—","S","T","K","F","KS","KF","X","XT","X3D","G","GE","GT","E"];
+const SLABEL={"—":"No suffix"}; SUFFIXES.forEach(s=>{ if(!SLABEL[s]) SLABEL[s]=s; });
+const state={sort:[], filters:new Set(SUFFIXES), query:"", fitState:{}, games:new Set(),
+  vendors:new Set(["Intel","AMD"]), unlimitedPower:false, highlighted:new Set()};
 
-/* default sort: newest gen first, then tier, then turbo, then threads, then name */
+/* default sort: newest generation first (chronological across vendors, Intel first on ties),
+   then tier, then turbo, then threads, then name */
 function defaultCmp(a,b){
-  return b.gen-a.gen || b.tier-a.tier || b.turbo-a.turbo || b.threads-a.threads ||
+  return b.genOrder-a.genOrder || (a.vendor===b.vendor?0:(a.vendor==="Intel"?-1:1)) ||
+         b.tier-a.tier || effTurbo(b)-effTurbo(a) || b.threads-a.threads ||
          a.model.localeCompare(b.model);
 }
 
@@ -384,14 +589,24 @@ document.getElementById("reset").addEventListener("click",()=>{
   state.sort=[]; state.filters=new Set(SUFFIXES);
   state.fitState={};
   state.games.clear();
+  state.vendors=new Set(["Intel","AMD"]);
+  state.highlighted.clear();
   state.unlimitedPower=false;
   document.getElementById("unlimitedPower").checked=false;
+  recalculatePerformance(false);
   updateColumnVisibility();
-  document.querySelectorAll("#views .tab").forEach(b=>b.classList.toggle("active",!b.dataset.game));
+  document.querySelectorAll("#views .tab").forEach(b=>b.classList.toggle("active",!!b.dataset.vendor));
   fbox.querySelectorAll("label.chk").forEach(l=>{l.classList.remove("off");l.querySelector("input").checked=true;});
   COLS.forEach((c,i)=>setWidth(i,c.w));
   render();
+  fitAllColumns();
 });
+
+/* ---------------- help ---------------- */
+const helpBox=document.getElementById("helpBox");
+document.getElementById("help").addEventListener("click",()=>helpBox.showModal());
+document.getElementById("helpClose").addEventListener("click",()=>helpBox.close());
+helpBox.addEventListener("click",e=>{ if(e.target===helpBox) helpBox.close(); });
 
 /* ---------------- header ---------------- */
 const hrow=document.getElementById("hrow");
@@ -421,6 +636,7 @@ function updateColumnVisibility(){
   syncTableWidth();
 }
 function syncTableWidth(){
+  wrapEl.style.height=(window.innerHeight-document.querySelector("header").offsetHeight)+"px";
   const total=COLS.reduce((a,c)=>a+(c.visible===false?0:c.w),0);
   tbl.style.width=Math.max(total,wrapEl.clientWidth)+"px";
   /* keep the sticky first column pinned correctly */
@@ -504,13 +720,33 @@ function cmpBy(a,b){
 /* ---------------- filtering ---------------- */
 function currentRows(){
   const terms=state.query.split(/[,;\n]+/).map(t=>t.trim().toLowerCase()).filter(Boolean);
-  let rows=DATA.filter(r=>state.filters.has(r.sfx));
+  let rows=DATA.filter(r=>state.filters.has(r.sfx)&&state.vendors.has(r.vendor));
   if(terms.length) rows=rows.filter(r=>{
-    const hay=(r.model+" "+r.genName+" "+r.arch).toLowerCase();
+    const hay=(r.vendor+" "+r.model+" "+r.genName+" "+r.arch).toLowerCase();
     return terms.some(t=>hay.includes(t));
   });
   rows.sort(state.sort.length?cmpBy:defaultCmp);
   return rows;
+}
+
+/* ---------------- settings line ---------------- */
+function updateHint(){
+  const parts=[];
+  const v=[...state.vendors];
+  parts.push(v.length===2?"<b>Intel + AMD</b> shown, newest generation first (Intel above AMD when generations tie)":
+             v.length===1?`<b>${v[0]} only</b>`:"<b>no vendor selected</b> — click Intel or AMD");
+  const games=GAME_DEFS.filter(([g])=>state.games.has(g)).map(([,t])=>t.replace(" Performance",""));
+  parts.push(games.length?`game tabs: <b>${games.join(", ")}</b> (estimates, fastest CPU = 100%)`:"no game tab open — click a tab to add its estimated performance column");
+  parts.push(state.unlimitedPower
+    ?"<b>Unlimited power ON</b>: good air cooling, power limits removed; unlocked chips (Intel K/KF/KS, AMD X/XT/PBO) get extra clock at max safe voltage, locked chips hold turbo indefinitely — Max Turbo and TDP show stock → <i>estimated</i>, game % recalculated"
+    :"stock power limits and clocks");
+  const hidden=SUFFIXES.filter(s=>!state.filters.has(s));
+  if(hidden.length) parts.push(`hidden suffixes: <b>${hidden.map(s=>SLABEL[s]).join(", ")}</b>`);
+  if(state.query.trim()) parts.push(`search: <b>${state.query.trim().replace(/</g,"&lt;")}</b>`);
+  if(state.sort.length) parts.push("sorted by <b>"+state.sort.map(s=>COLS[s.i].t+(s.dir>0?" ▲":" ▼")).join(", ")+"</b>");
+  if(state.highlighted.size) parts.push(`<b>${state.highlighted.size}</b> highlighted (click a row to toggle)`);
+  document.getElementById("hint").innerHTML=parts.join(" · ");
+  syncTableWidth();
 }
 
 /* ---------------- render ---------------- */
@@ -524,8 +760,8 @@ function render(){
     const first = r.gen!==prevGen;
     if(first && prevGen!==null) band=!band;
     prevGen=r.gen;
-    const cls=(band?"band ":"")+(first?"gtop":"");
-    return `<tr class="${cls}">`+visibleCols.map(c=>
+    const cls=(band?"band ":"")+(first?"gtop ":"")+(state.highlighted.has(r.model)?"hl":"");
+    return `<tr class="${cls}" data-model="${r.model}">`+visibleCols.map(c=>
       `<td data-col="${c.k}" class="${c.sticky?"sticky ":""}${c.num?"num ":""}" title="${c.txt(r).replace(/"/g,'&quot;')}">${c.h(r)}</td>`
     ).join("")+"</tr>";
   }).join("");
@@ -535,13 +771,26 @@ function render(){
     a.textContent = s<0 ? "" : (state.sort[s].dir>0?"▲":"▼")+(state.sort.length>1?(s+1):"");
   });
   document.getElementById("count").textContent=`— ${rows.length} of ${DATA.length} models shown`;
+  updateHint();
 }
+/* row highlight toggle */
+document.getElementById("body").addEventListener("click",e=>{
+  if(window.getSelection && String(window.getSelection()).length) return;
+  const tr=e.target.closest("tr"); if(!tr) return;
+  const m=tr.dataset.model;
+  state.highlighted.has(m)?state.highlighted.delete(m):state.highlighted.add(m);
+  tr.classList.toggle("hl",state.highlighted.has(m));
+  updateHint();
+});
 document.querySelectorAll("#views .tab").forEach(button=>{
   button.addEventListener("click",()=>{
-    const game=button.dataset.game;
+    const game=button.dataset.game, vendor=button.dataset.vendor;
     if(game){
       state.games.has(game)?state.games.delete(game):state.games.add(game);
       button.classList.toggle("active",state.games.has(game));
+    }else if(vendor){
+      state.vendors.has(vendor)?state.vendors.delete(vendor):state.vendors.add(vendor);
+      button.classList.toggle("active",state.vendors.has(vendor));
     }
     updateColumnVisibility();
     render();

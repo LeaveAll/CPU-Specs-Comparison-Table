@@ -540,7 +540,8 @@ const generationFactor={};
 function memoryChoices(r){
   return (r.mem.match(/DDR[45][^/]+/g)||[]).map(text=>{
     const type=(text.match(/^DDR[45]/)||[""])[0];
-    const speeds=[...text.matchAll(/\d+/g)].map(x=>+x[0]);
+    const body=text.replace(/^DDR[45]-/,"");
+    const speeds=[...body.matchAll(/\d+/g)].map(x=>+x[0]);
     return {type,low:speeds[0]||0,high:speeds[speeds.length-1]||0};
   }).filter(x=>x.high);
 }
@@ -569,10 +570,12 @@ function memoryHtml(r){
   return r.mem.replace(/DDR[45][^/]+/g,text=>{
     const type=(text.match(/^DDR[45]/)||[""])[0];
     if(type!==choice.type) return text;
-    const numbers=[...text.matchAll(/\d+/g)];
+    const prefix=(text.match(/^DDR[45]-/)||[""])[0];
+    const body=text.slice(prefix.length);
+    const numbers=[...body.matchAll(/\d+/g)];
     let index=0;
     const target=state.fastMemory?numbers.length-1:0;
-    return text.replace(/\d+/g,number=>{
+    return prefix+body.replace(/\d+/g,number=>{
       const selected=index++===target;
       return selected?`<strong class="mem-selected">${number}</strong>`:number;
     });

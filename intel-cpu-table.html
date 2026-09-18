@@ -540,16 +540,17 @@ const generationFactor={};
 function memoryChoices(r){
   return (r.mem.match(/DDR[45][^/]+/g)||[]).map(text=>{
     const type=(text.match(/^DDR[45]/)||[""])[0];
-    const speed=+(text.match(/(\d+)\s*$/)||[0,0])[1];
-    return {type,speed};
-  }).filter(x=>x.speed);
+    const speeds=[...text.matchAll(/\d+/g)].map(x=>+x[0]);
+    return {type,low:speeds[0]||0,high:speeds[speeds.length-1]||0};
+  }).filter(x=>x.high);
 }
 function selectedMemory(r,memoryType="DDR5",fastest=true){
   const choices=memoryChoices(r);
   if(!choices.length) return null;
   const preferred=choices.filter(x=>x.type===memoryType);
   const pool=preferred.length?preferred:choices;
-  return pool.reduce((a,b)=>fastest?(b.speed>a.speed?b:a):(b.speed<a.speed?b:a));
+  const choice=pool.reduce((a,b)=>fastest?(b.high>a.high?b:a):(b.low<a.low?b:a));
+  return {...choice,speed:fastest?choice.high:choice.low};
 }
 function memoryFactor(r,fastMemory=false,memoryType="DDR5"){
   const choice=selectedMemory(r,memoryType,fastMemory);
@@ -567,9 +568,14 @@ function memoryHtml(r){
   if(!choice) return r.mem;
   return r.mem.replace(/DDR[45][^/]+/g,text=>{
     const type=(text.match(/^DDR[45]/)||[""])[0];
-    const speed=+(text.match(/(\d+)\s*$/)||[0,0])[1];
     if(type!==choice.type) return text;
-    return text.replace(/(\d+)\s*$/,`<strong class="mem-selected">$1</strong>`);
+    const numbers=[...text.matchAll(/\d+/g)];
+    let index=0;
+    const target=state.fastMemory?numbers.length-1:0;
+    return text.replace(/\d+/g,number=>{
+      const selected=index++===target;
+      return selected?`<strong class="mem-selected">${number}</strong>`:number;
+    });
   });
 }
 function gameScore(r,game,unlimitedPower=false,fastMemory=false,memoryType="DDR5"){

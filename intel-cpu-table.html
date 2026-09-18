@@ -444,7 +444,7 @@ function contentWidths(i,rows){
   const probe=document.createElement("span");
   probe.style.whiteSpace="nowrap";
   ruler.innerHTML=""; ruler.appendChild(probe);
-  const sample=document.querySelector(`#body tr td:nth-child(${i+1})`)||hrow.children[i];
+  const sample=document.querySelector(`#body tr td[data-col="${c.k}"]`)||hrow.children[i];
   const cs=getComputedStyle(sample);
   ruler.style.font=cs.font||`${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
   ruler.style.fontFamily=cs.fontFamily; ruler.style.fontSize=cs.fontSize;
@@ -454,7 +454,7 @@ function contentWidths(i,rows){
 function autoFit(i){
   const rows=currentRows(); if(!rows.length) return;
   const c=COLS[i];
-  const sample=document.querySelector(`#body tr td:nth-child(${i+1})`)||hrow.children[i];
+  const sample=document.querySelector(`#body tr td[data-col="${c.k}"]`)||hrow.children[i];
   const cs=getComputedStyle(sample);
   const chrome=parseFloat(cs.paddingLeft)+parseFloat(cs.paddingRight)+
                parseFloat(cs.borderRightWidth||1)+1; /* padding + cell border only */
@@ -504,6 +504,7 @@ function currentRows(){
 function render(){
   const rows=currentRows();
   const body=document.getElementById("body");
+  const visibleCols=COLS.filter(c=>c.visible!==false);
   /* band consecutive runs of the same generation so groups read as blocks */
   let band=false, prevGen=null;
   body.innerHTML=rows.map(r=>{
@@ -511,8 +512,8 @@ function render(){
     if(first && prevGen!==null) band=!band;
     prevGen=r.gen;
     const cls=(band?"band ":"")+(first?"gtop":"");
-    return `<tr class="${cls}">`+COLS.map(c=>
-      `<td class="${c.sticky?"sticky ":""}${c.num?"num ":""}" title="${c.txt(r).replace(/"/g,'&quot;')}">${c.h(r)}</td>`
+    return `<tr class="${cls}">`+visibleCols.map(c=>
+      `<td data-col="${c.k}" class="${c.sticky?"sticky ":""}${c.num?"num ":""}" title="${c.txt(r).replace(/"/g,'&quot;')}">${c.h(r)}</td>`
     ).join("")+"</tr>";
   }).join("");
   COLS.forEach((c,i)=>{
@@ -531,8 +532,8 @@ document.querySelectorAll("#views .tab").forEach(button=>{
     fitAllColumns();
   });
 });
-render();
 updateColumnVisibility();
+render();
 fitAllColumns();
 </script>
 </body>

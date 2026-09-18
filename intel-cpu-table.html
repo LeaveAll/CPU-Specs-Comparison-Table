@@ -87,6 +87,10 @@
   .views .sep{width:1px;background:var(--line);margin:0 4px;align-self:stretch}
   .power{display:inline-flex;align-items:center;gap:6px;color:var(--dim);white-space:nowrap}
   .power input{accent-color:var(--accent);cursor:pointer}
+  .memory-mode{display:inline-flex;align-items:center;gap:3px}
+  .memory-mode button{padding:3px 7px;font-size:11px}
+  .memory-mode button.active{border-color:var(--accent);color:#fff;background:#1b3658}
+  .mem-selected{color:#111;background:#ffd866;border-radius:3px;padding:1px 3px;font-weight:700}
   #help{margin-left:auto}
   .rs{position:absolute;top:0;right:0;width:13px;height:100%;cursor:col-resize;z-index:5}
   .rs:hover{background:linear-gradient(90deg,transparent,var(--accent))}
@@ -119,6 +123,11 @@
     <input id="search" placeholder='Search models — comma separated, e.g.  6700k, 9500, 5800x'>
     <div class="filters" id="filters"><span class="lbl">Show suffix:</span></div>
     <label class="power"><input type="checkbox" id="unlimitedPower"> Unlimited power / safe OC estimate</label>
+    <label class="power"><input type="checkbox" id="fastMemory"> Fastest supported memory</label>
+    <span class="memory-mode" id="memoryMode" aria-label="Memory type">
+      <button class="mini active" data-memory="DDR5">DDR5</button>
+      <button class="mini" data-memory="DDR4">DDR4</button>
+    </span>
     <button class="mini" id="reset">Reset</button>
   </div>
   <div class="hint" id="hint"></div>
@@ -133,6 +142,8 @@
   <p>Each tab adds an estimated relative-performance column; any combination can be open at once. The fastest CPU in that game is 100%. Values are a model (generation IPC × clock × a small thread bonus), not measured benchmarks.</p>
   <h3>Unlimited power / safe OC estimate</h3>
   <p>Assumes good air cooling, power limits removed, and the highest safe voltage. Unlocked parts (Intel K/KF/KS, AMD X/XT/non-X3D via PBO or manual multiplier) get extra clock; locked parts simply hold their turbo indefinitely. Max Turbo and TDP then show the stock value with the estimated value in <i style="color:var(--oc)">italic gold</i> beside it, and the game percentages are recalculated.</p>
+  <h3>Fastest supported memory</h3>
+  <p>Enables the fastest memory speed listed for each CPU's platform and recalculates the game estimates. Use the DDR4 / DDR5 buttons to choose the memory family for CPUs that support both; the selected speed is highlighted in the DDR Memory column. If a CPU does not support the selected family, its fastest supported family is used instead.</p>
   <h3>Search</h3>
   <p>Type any part of a model, generation, architecture or vendor. Separate several terms with commas to show them together, e.g. <code>6700k, 9500, 5800x</code>.</p>
   <h3>Suffix filters</h3>
@@ -504,7 +515,8 @@ const COLS=[
   {k:"l3",     t:"L3 Cache", w:95, num:true, v:r=>r.l3, txt:r=>r.l3+" MB"},
   {k:"socket", t:"Socket", w:110, v:r=>r.socket},
   {k:"chipset",t:"Chipset", w:275, v:r=>r.chipset},
-  {k:"mem",    t:"DDR Memory", w:250, v:r=>r.mem},
+  {k:"mem",    t:"DDR Memory", w:250, v:r=>r.mem,
+   h:r=>memoryHtml(r), txt:r=>memoryText(r)},
   {k:"ipc",    t:"IPC Uplift vs Prev. Gen", w:170, num:true, v:r=>r.ipc,
    txt:r=>(r.ipc>0?"+":"")+r.ipc+"%",
    h:r=>`<span class="${r.ipc>0?'up':(r.ipc<0?'down':'flat')}">${r.ipc>0?"+":""}${r.ipc}%</span>`},
@@ -525,23 +537,58 @@ const generationFactor={};
   chains.Intel.reduce((f,k)=>generationFactor[k]=f*(1+GENS[k].ipc/100),1/(1+GENS.I6.ipc/100));
   chains.AMD.reduce((f,k,idx)=>generationFactor[k]=idx===0?f:f*(1+GENS[k].ipc/100),0.97);
 })();
-function gameScore(r,game,unlimitedPower=false){
+function memoryChoices(r){
+  return (r.mem.match(/DDR[45][^/]+/g)||[]).map(text=>{
+    const type=(text.match(/^DDR[45]/)||[""])[0];
+    const speed=+(text.match(/(\d+)\s*$/)||[0,0])[1];
+    return {type,speed};
+  }).filter(x=>x.speed);
+}
+function selectedMemory(r,memoryType="DDR5"){
+  const choices=memoryChoices(r);
+  if(!choices.length) return null;
+  return choices.find(x=>x.type===memoryType)||choices.reduce((a,b)=>b.speed>a.speed?b:a);
+}
+function memoryFactor(r,fastMemory=false,memoryType="DDR5"){
+  if(!fastMemory) return 1;
+  const choice=selectedMemory(r,memoryType);
+  if(!choice) return 1;
+  const base=choice.type==="DDR5"?4800:3200;
+  const sensitivity=choice.type==="DDR5"?0.08:0.06;
+  return 1+Math.max(0,choice.speed-base)/base*sensitivity;
+}
+function memoryText(r){
+  const choice=state.fastMemory?selectedMemory(r,state.memoryType):null;
+  return choice?`${r.mem} · selected ${choice.type}-${choice.speed}`:r.mem;
+}
+function memoryHtml(r){
+  if(!state.fastMemory) return r.mem;
+  const choice=selectedMemory(r,state.memoryType);
+  if(!choice) return r.mem;
+  return r.mem.replace(/DDR[45][^/]+/g,text=>{
+    const type=(text.match(/^DDR[45]/)||[""])[0];
+    const speed=+(text.match(/(\d+)\s*$/)||[0,0])[1];
+    if(type!==choice.type) return text;
+    return text.replace(/(\d+)\s*$/,`<strong class="mem-selected">$1</strong>`);
+  });
+}
+function gameScore(r,game,unlimitedPower=false,fastMemory=false,memoryType="DDR5"){
   const turbo=unlimitedPower?r.oc.turbo:r.turbo;
   const sustain=unlimitedPower&&!r.unlocked?1.02:1;
   const serial=turbo*sustain*(generationFactor[r.gen]||1);
   const thread=Math.log2(Math.max(1,r.threads));
   const weight=game==="aoe3de"?0.28:(game==="ra2yr"?0.08:0.15);
-  return serial*(1-weight+weight*thread/5);
+  return serial*(1-weight+weight*thread/5)*memoryFactor(r,fastMemory,memoryType);
 }
-function recalculatePerformance(unlimitedPower=false){
+function recalculatePerformance(unlimitedPower=false,fastMemory=false,memoryType="DDR5"){
   const gameMax={};
   GAME_DEFS.forEach(([game])=>{
-    gameMax[game]=Math.max(...DATA.map(r=>gameScore(r,game,unlimitedPower)));
+    gameMax[game]=Math.max(...DATA.map(r=>gameScore(r,game,unlimitedPower,fastMemory,memoryType)));
   });
   DATA.forEach(r=>{
     r.performance={};
     GAME_DEFS.forEach(([game])=>{
-      r.performance[game]=Math.round(gameScore(r,game,unlimitedPower)/gameMax[game]*1000)/10;
+      r.performance[game]=Math.round(gameScore(r,game,unlimitedPower,fastMemory,memoryType)/gameMax[game]*1000)/10;
     });
   });
 }
@@ -559,7 +606,8 @@ COLS.forEach(c=>{ if(!c.txt) c.txt=r=>String(c.v(r)); if(!c.h) c.h=r=>c.txt(r); 
 const SUFFIXES=["—","S","T","K","F","KS","KF","X","XT","X3D","G","GE","GT","E"];
 const SLABEL={"—":"No suffix"}; SUFFIXES.forEach(s=>{ if(!SLABEL[s]) SLABEL[s]=s; });
 const state={sort:[], filters:new Set(SUFFIXES), query:"", fitState:{}, games:new Set(),
-  vendors:new Set(["Intel","AMD"]), unlimitedPower:false, highlighted:new Set()};
+  vendors:new Set(["Intel","AMD"]), unlimitedPower:false, fastMemory:false,
+  memoryType:"DDR5", highlighted:new Set()};
 
 function variantKey(model){
   return model.trim().replace(/\s+PLUS$/i,"")
@@ -606,8 +654,12 @@ document.getElementById("reset").addEventListener("click",()=>{
   state.vendors=new Set(["Intel","AMD"]);
   state.highlighted.clear();
   state.unlimitedPower=false;
+  state.fastMemory=false;
+  state.memoryType="DDR5";
   document.getElementById("unlimitedPower").checked=false;
-  recalculatePerformance(false);
+  document.getElementById("fastMemory").checked=false;
+  document.querySelectorAll("#memoryMode button").forEach(b=>b.classList.toggle("active",b.dataset.memory==="DDR5"));
+  recalculatePerformance(false,false,"DDR5");
   updateColumnVisibility();
   document.querySelectorAll("#views .tab").forEach(b=>b.classList.toggle("active",!!b.dataset.vendor));
   fbox.querySelectorAll("label.chk").forEach(l=>{l.classList.remove("off");l.querySelector("input").checked=true;});
@@ -754,6 +806,9 @@ function updateHint(){
   parts.push(state.unlimitedPower
     ?"<b>Unlimited power ON</b>: good air cooling, power limits removed; unlocked chips (Intel K/KF/KS, AMD X/XT/PBO) get extra clock at max safe voltage, locked chips hold turbo indefinitely — Max Turbo and TDP show stock → <i>estimated</i>, game % recalculated"
     :"stock power limits and clocks");
+  parts.push(state.fastMemory
+    ?`<b>Fastest memory ON</b>: ${state.memoryType} preferred where supported; selected speed highlighted and game % recalculated`
+    :"platform memory baseline");
   const hidden=SUFFIXES.filter(s=>!state.filters.has(s));
   if(hidden.length) parts.push(`hidden suffixes: <b>${hidden.map(s=>SLABEL[s]).join(", ")}</b>`);
   if(state.query.trim()) parts.push(`search: <b>${state.query.trim().replace(/</g,"&lt;")}</b>`);
@@ -813,9 +868,24 @@ document.querySelectorAll("#views .tab").forEach(button=>{
 });
 document.getElementById("unlimitedPower").addEventListener("change",e=>{
   state.unlimitedPower=e.target.checked;
-  recalculatePerformance(state.unlimitedPower);
+  recalculatePerformance(state.unlimitedPower,state.fastMemory,state.memoryType);
   render();
   fitAllColumns();
+});
+document.getElementById("fastMemory").addEventListener("change",e=>{
+  state.fastMemory=e.target.checked;
+  recalculatePerformance(state.unlimitedPower,state.fastMemory,state.memoryType);
+  render();
+  fitAllColumns();
+});
+document.querySelectorAll("#memoryMode button").forEach(button=>{
+  button.addEventListener("click",()=>{
+    state.memoryType=button.dataset.memory;
+    document.querySelectorAll("#memoryMode button").forEach(b=>b.classList.toggle("active",b===button));
+    recalculatePerformance(state.unlimitedPower,state.fastMemory,state.memoryType);
+    render();
+    fitAllColumns();
+  });
 });
 updateColumnVisibility();
 render();
